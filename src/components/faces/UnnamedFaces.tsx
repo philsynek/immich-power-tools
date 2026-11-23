@@ -247,7 +247,8 @@ export default function UnnamedFaces() {
     try {
       const data = await facesApi.undoFaceActions(ids);
       const bad = (data.results as any[]).filter((r) => !r.ok);
-      setMsg(`${ids.length - bad.length} undone${bad.length ? `, ${bad.length} errors: ${bad[0].error}` : ""}`);
+      const loose = data.results.filter((r) => r.ok && r.note).length;
+      setMsg(`${ids.length - bad.length} undone${loose ? ` (${loose} back as loose faces: original group no longer exists)` : ""}${bad.length ? `, ${bad.length} errors: ${bad[0].error}` : ""}`);
     } catch (e: any) { setMsg(facesApi.faceApiError(e)); }
     setBusy(false);
     if (view === "log") loadLog(); else { loadList(listLen); loadPeople(); }
@@ -456,7 +457,7 @@ export default function UnnamedFaces() {
                     ? <a className="text-blue-500 underline" href={`${exImmichUrl}/people/${r.faceId}`} target="_blank" rel="noreferrer">group</a>
                     : r.assetId ? <a className="text-blue-500 underline" href={`${exImmichUrl}/photos/${r.assetId}`} target="_blank" rel="noreferrer">open</a> : null}
                 </td>
-                <td>{r.ok ? (r.undoneAt ? "undone" : r.action === "delete" ? "deleted (only a snapshot can revert this)" : "ok") : `error: ${r.error}`}</td>
+                <td>{r.ok ? (r.undoneAt ? "undone" : r.action === "delete" ? "deleted (only a snapshot can revert this)" : r.error ? `ok · ${r.error}` : "ok") : `error: ${r.error}`}</td>
               </tr>
             ))}
           </tbody>

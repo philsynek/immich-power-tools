@@ -128,7 +128,7 @@ Assignments and hidden groups can be undone – single rows or a selection (Shif
 
 | Action | Immich API | Undo |
 |---|---|---|
-| Assign / confirm | `PUT /api/faces/{personId}` with body `{ "id": faceId }` | Moves the face back to its previous person. If it had none, it is moved to a new unnamed person (`POST /api/people`), because the API cannot un-assign a face. |
+| Assign / confirm | `PUT /api/faces/{personId}` with body `{ "id": faceId }` | Moves the face back to its previous person. If it had none, or that person no longer exists (Immich removes people without faces), it is moved to a new unnamed person (`POST /api/people`), because the API cannot un-assign a face; the tool then reviews it as a loose face. A deleted named person is not recreated. |
 | Assign whole group | the same call for every face of the group (except excluded/rejected ones) | per face, as above |
 | Stranger | `PUT /api/people/{id}` with `{ "isHidden": true }` | `isHidden: false` |
 | Name group | `PUT /api/people/{id}` with `{ "name": "…" }` | name cleared again (`""`) |

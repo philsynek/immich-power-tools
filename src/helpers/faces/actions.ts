@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
+import { db } from "@/config/db";
 import { appDb } from "@/db";
-import { FacesUser, groupFaces, immich, keptOutOfGroup, liveFace, logAction } from "./common";
+import { FacesUser, groupFaces, immich, keptOutOfGroup, liveFace, logAction, rowsOf } from "./common";
 import { assignFace } from "./assign";
 import { syncSuggestions } from "./sync";
 import type { IFaceActionResult } from "@/types/faces";
@@ -155,7 +156,7 @@ export async function newPerson(user: FacesUser, faceId: string, name: string) {
 
 const UNDOABLE = ["assign", "hide-group", "name-group", "reject"];
 
-async function undoOne(user: FacesUser, logId: number): Promise<{ logId: number; ok: boolean; error?: string }> {
+async function undoOne(user: FacesUser, logId: number): Promise<{ logId: number; ok: boolean; error?: string; note?: string }> {
   const row = ((await appDb.all(sql`SELECT id, action, face_id AS "faceId", asset_id AS "assetId", from_person_id AS "fromPersonId",
       to_person_id AS "toPersonId", distance, ok, undone_at AS "undoneAt"
     FROM face_review_log WHERE id = ${logId} AND user_id = ${user.id}`)) as any[])[0];
@@ -185,23 +186,31 @@ async function undoOne(user: FacesUser, logId: number): Promise<{ logId: number;
 
   // assign: move the face back to its previous person. If it had none, move it to a fresh unnamed
   // person instead (the API cannot un-assign; Immich's clustering may merge it again later).
-  let target: string = row.fromPersonId;
+  // If the previous group/person no longer exists in Immich (e.g. removed by Immich's cleanup of people
+  // without faces), it is not recreated: the face comes back as a loose face instead.
+  let target: string | null = row.fromPersonId;
+  let note: string | undefined;
+  if (target) {
+    const p = await db.execute(sql`SELECT 1 FROM person WHERE "ownerId" = ${user.id}::uuid AND "personGroupId" = ${target}::uuid`);
+    if (!rowsOf(p).length) { target = null; note = "original group no longer exists, back as a loose face"; }
+  }
+  const loose = !target;
   if (!target) {
     const c = await immich(user, "POST", "/people", {});
     if (!c.ok) return { logId, ok: false, error: `create person: ${c.error}` };
-    target = c.data.id;
+    target = c.data.id as string;
   }
   const r = await immich(user, "PUT", `/faces/${target}`, { id: row.faceId });
   await logAction(user, {
     action: "undo", faceId: row.faceId, assetId: row.assetId, fromPersonId: row.toPersonId, toPersonId: target,
-    distance: row.distance, ok: r.ok, error: r.error,
+    distance: row.distance, ok: r.ok, error: r.error ?? note ?? null,
   }, now);
   if (r.ok) {
     await markUndone();
-    await appDb.run(sql`UPDATE face_suggestions SET status = 'open', current_person_id = ${row.fromPersonId ? target : null}
+    await appDb.run(sql`UPDATE face_suggestions SET status = 'open', current_person_id = ${loose ? null : target}
       WHERE face_id = ${row.faceId}`);
   }
-  return { logId, ok: r.ok, error: r.error ?? undefined };
+  return { logId, ok: r.ok, error: r.error ?? undefined, note };
 }
 
 /** Reverts assignments, single-face strangers, hidden and named groups. */

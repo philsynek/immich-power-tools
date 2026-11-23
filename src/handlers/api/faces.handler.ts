@@ -38,7 +38,7 @@ export const nameFaceGroup = (clusterId: string, name: string): Promise<{ ok: bo
   API.post(FACES_NAME_GROUP_PATH, { clusterId, name });
 export const createPersonForFace = (faceId: string, name: string): Promise<IFaceActionResult & { personId: string }> =>
   API.post(FACES_NEW_PERSON_PATH, { faceId, name });
-export const undoFaceActions = (logIds: number[]): Promise<{ results: { logId: number; ok: boolean; error?: string }[]; ok: boolean; error?: string }> =>
+export const undoFaceActions = (logIds: number[]): Promise<{ results: { logId: number; ok: boolean; error?: string; note?: string }[]; ok: boolean; error?: string }> =>
   API.post(FACES_UNDO_PATH, { logIds });
 
 /** Readable message from a rejected API call (the API helper rejects with { error, message, status }). */
