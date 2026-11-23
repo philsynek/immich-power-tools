@@ -20,6 +20,18 @@ export const visibleFace = (alias: string) => {
   return sql`${f}."deletedAt" IS NULL AND ${f}."assetDeletedAt" IS NULL AND ${f}."assetVisibility" <> 'locked'`;
 };
 
+/**
+ * The face's group, or NULL when the group has no other visible face of this owner: a group of one
+ * (e.g. created by undo for a loose face) is reviewed as a loose face.
+ */
+export const groupOrLoose = (alias: string) => {
+  const f = sql.raw(alias);
+  return sql`CASE WHEN ${f}."personGroupId" IS NULL THEN NULL
+    WHEN EXISTS (SELECT 1 FROM asset_face o WHERE o."personGroupId" = ${f}."personGroupId" AND o."ownerId" = ${f}."ownerId"
+                 AND o.id <> ${f}.id AND ${visibleFace("o")}) THEN ${f}."personGroupId"::text
+    ELSE NULL END`;
+};
+
 let pragmas: Promise<void> | null = null;
 /**
  * WAL + synchronous=NORMAL for the app DB: far fewer fsyncs. The local libsql driver is synchronous,

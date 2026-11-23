@@ -29,6 +29,8 @@ Before listing, the tool compares open suggestions with the live database – at
 right after group actions (*Refresh list* forces it): faces that now belong to a named person or were
 deleted are dropped, faces that moved to another unnamed group are re-attached there. Faces of photos
 moved to the trash or the locked folder are hidden and come back if the photo is restored.
+A group whose only visible face is the one under review counts as a loose face (e.g. the one-face group that
+*Undo* creates for a loose face, see below).
 
 The scan runs in the background, in batches of 50 faces, and can be paused (container restart) and
 resumed; progress is stored per user. On spinning disks, put `APP_DB_PATH` on an SSD if possible –

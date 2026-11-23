@@ -1,7 +1,7 @@
 import { sql } from "drizzle-orm";
 import { db } from "@/config/db";
 import { appDb } from "@/db";
-import { rowsOf, textList, uuidList } from "./common";
+import { groupOrLoose, rowsOf, textList, uuidList } from "./common";
 
 const g = globalThis as any;
 g.__faceSync = g.__faceSync || new Map<string, number>();
@@ -15,6 +15,7 @@ const CHUNK = 1000;
  *  - photo is in the trash or in the locked folder                           → status 'unavailable'
  *    (re-checked every time: comes back as 'open' when restored / unlocked)
  *  - face now sits in another unnamed group or has no person                 → current_person_id updated
+ *    (a group whose only visible face is this one counts as "no group": reviewed as a loose face)
  * Runs at most once a minute per user unless forced.
  */
 export async function syncSuggestions(ownerId: string, force = false): Promise<void> {
@@ -27,7 +28,7 @@ export async function syncSuggestions(ownerId: string, force = false): Promise<v
   for (let i = 0; i < rows.length; i += CHUNK) {
     const chunk = rows.slice(i, i + CHUNK);
     const r = await db.execute(sql`
-      SELECT f.id::text AS id, f."personGroupId"::text AS pid, (f."deletedAt" IS NOT NULL) AS del, p.name,
+      SELECT f.id::text AS id, ${groupOrLoose("f")} AS pid, (f."deletedAt" IS NOT NULL) AS del, p.name,
              (f."assetDeletedAt" IS NOT NULL OR f."assetVisibility" = 'locked') AS hidden
       FROM asset_face f
       LEFT JOIN person p ON p."personGroupId" = f."personGroupId" AND p."ownerId" = ${ownerId}::uuid
@@ -37,7 +38,7 @@ export async function syncSuggestions(ownerId: string, force = false): Promise<v
     const moved: { id: string; pid: string | null }[] = [];
     for (const row of chunk) {
       const l = live.get(row.faceId);
-      if (!l || l.del || (l.pid && l.name)) { resolved.push(row.faceId); continue; }
+      if (!l || l.del || l.name) { resolved.push(row.faceId); continue; }  // named person (any group size)
       if (l.hidden) { if (row.status !== "unavailable") unavailable.push(row.faceId); continue; }
       if (row.status === "unavailable") reopened.push(row.faceId);
       if ((l.pid ?? null) !== (row.currentPersonId ?? null)) moved.push({ id: row.faceId, pid: l.pid ?? null });

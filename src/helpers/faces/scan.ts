@@ -1,7 +1,7 @@
 import { sql } from "drizzle-orm";
 import { db } from "@/config/db";
 import { appDb } from "@/db";
-import { rowsOf, visibleFace } from "./common";
+import { groupOrLoose, rowsOf, visibleFace } from "./common";
 import type { IFaceScanProgress } from "@/types/faces";
 
 /** Cosine distance above which a match is not stored as a suggestion. */
@@ -64,7 +64,7 @@ async function run(ownerId: string) {
 
   for (;;) {
     const rows = rowsOf(await db.execute(sql`
-      SELECT f.id AS "faceId", f."assetId", f."personGroupId" AS "currentPersonId",
+      SELECT f.id AS "faceId", f."assetId", ${groupOrLoose("f")} AS "currentPersonId",
              f."imageWidth" AS w, f."imageHeight" AS h,
              f."boundingBoxX1" AS x1, f."boundingBoxY1" AS y1, f."boundingBoxX2" AS x2, f."boundingBoxY2" AS y2,
              a."localDateTime" AS ldt, n.pids, n.ds
