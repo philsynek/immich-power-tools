@@ -119,3 +119,20 @@ export const WORKFLOW_RUNS_PATH = (id: string) => BASE_API_ENDPOINT + "/workflow
 export const EXPORT_WORKFLOW_PATH = (id: string) => BASE_API_ENDPOINT + "/workflows/" + id + "/export";
 export const IMPORT_WORKFLOW_PATH = BASE_API_ENDPOINT + "/workflows/import";
 export const WORKFLOW_RUN_DETAIL_PATH = (id: string, runId: string) => BASE_API_ENDPOINT + "/workflows/" + id + "/runs/" + runId;
+// Unnamed Faces
+export const FACES_PEOPLE_PATH = BASE_API_ENDPOINT + "/faces/people";
+export const FACES_NAMED_PEOPLE_PATH = BASE_API_ENDPOINT + "/faces/persons";
+export const FACES_SUGGESTIONS_PATH = BASE_API_ENDPOINT + "/faces/suggestions";
+export const FACES_GROUPS_PATH = BASE_API_ENDPOINT + "/faces/groups";
+export const FACES_SCAN_PATH = BASE_API_ENDPOINT + "/faces/scan";
+export const FACES_LOG_PATH = BASE_API_ENDPOINT + "/faces/log";
+export const FACES_APPLY_PATH = BASE_API_ENDPOINT + "/faces/apply";
+export const FACES_APPLY_GROUP_PATH = BASE_API_ENDPOINT + "/faces/apply-group";
+export const FACES_REJECT_PATH = BASE_API_ENDPOINT + "/faces/reject";
+export const FACES_EXCLUDE_PATH = BASE_API_ENDPOINT + "/faces/exclude";
+export const FACES_DELETE_PATH = BASE_API_ENDPOINT + "/faces/delete";
+export const FACES_DELETE_GROUP_PATH = BASE_API_ENDPOINT + "/faces/delete-group";
+export const FACES_HIDE_GROUP_PATH = BASE_API_ENDPOINT + "/faces/hide-group";
+export const FACES_NAME_GROUP_PATH = BASE_API_ENDPOINT + "/faces/name-group";
+export const FACES_NEW_PERSON_PATH = BASE_API_ENDPOINT + "/faces/new-person";
+export const FACES_UNDO_PATH = BASE_API_ENDPOINT + "/faces/undo";

@@ -129,6 +129,7 @@ bun run dev
 
 - [x] Manage People
   - [x] Smart Merge
+  - [x] Unnamed Faces – confirm suggested people for unnamed faces and groups ([docs](./docs/UNNAMED_FACES.md))
 - [x] Manage Albums
   - [x] Bulk Delete
   - [x] Bulk Share
